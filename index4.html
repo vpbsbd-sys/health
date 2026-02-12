@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Health is Wealth App</title>
+    <style>
+        :root {
+            --primary-green: #27ae60;
+            --primary-blue: #2980b9;
+            --accent-orange: #f39c12;
+            --bg-dark: #1a1a1a;
+            --card-bg: #ffffff;
+            --text-main: #2c3e50;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 480px;
+            margin-bottom: 50px;
+        }
+
+        .logo-container {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .logo-container img {
+            width: 220px;
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            border-top: 5px solid var(--primary-green);
+        }
+
+        label {
+            display: block;
+            font-weight: 700;
+            font-size: 11px;
+            margin-bottom: 5px;
+            color: var(--primary-blue);
+            text-transform: uppercase;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #edf2f7;
+            border-radius: 12px;
+            font-size: 16px;
+            background: #f8fafc;
+            box-sizing: border-box;
+            transition: 0.3s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary-green);
+            outline: none;
+            background: white;
+        }
+
+        .mic-btn {
+            background: #f8fafc;
+            border: 2px solid #edf2f7;
+            border-radius: 12px;
+            cursor: pointer;
+            padding: 0 15px;
+            font-size: 18px;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 50px;
+        }
+
+        .mic-btn.listening {
+            background: #e74c3c;
+            color: white;
+            border-color: #c0392b;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        button.save-btn {
+            background: linear-gradient(to right, var(--primary-green), var(--primary-blue));
+            color: white;
+            border: none;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
+            margin-top: 10px;
+        }
+
+        .visit-card {
+            background: white;
+            border-radius: 15px;
+            padding: 15px;
+            margin-top: 15px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border-left: 6px solid var(--accent-orange);
+        }
+
+        .visit-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .visit-date { font-size: 11px; color: #a0aec0; font-weight: bold; }
+        .tag { font-size: 10px; background: #ebf8ff; color: #2b6cb0; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
+        
+        #syncStatus {
+            text-align: center;
+            font-size: 12px;
+            margin-top: 12px;
+            color: var(--primary-green);
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo-container">
+        <img src="image_589dda.png" alt="Health is Wealth Logo">
+    </div>
+
+    <div class="card">
+        <label>Patient Name</label>
+        <div class="input-row">
+            <input type="text" id="userName" placeholder="Your Full Name" onchange="saveProfile()">
+            <button class="mic-btn" onclick="runSpeech('userName', true)">🎤</button>
+        </div>
+
+        <label>Doctor's Name</label>
+        <div class="input-row">
+            <input type="text" id="drName" placeholder="Attending Doctor" onchange="saveProfile()">
+            <button class="mic-btn" onclick="runSpeech('drName', true)">🎤</button>
+        </div>
+
+        <label>Category</label>
+        <select id="categorySelect" onchange="updateIllnessDropdown()" style="margin-bottom:15px;"></select>
+
+        <label>Problem / Illness</label>
+        <select id="illnessSelect" style="margin-bottom:15px;"></select>
+
+        <label>Medication Given</label>
+        <div class="input-row">
+            <input type="text" id="medicine" placeholder="e.g. Paracetamol 500mg">
+            <button class="mic-btn" onclick="runSpeech('medicine')">🎤</button>
+        </div>
+
+        <label>Notes</label>
+        <div class="input-row">
+            <textarea id="notes" rows="2" placeholder="Additional advice..."></textarea>
+            <button class="mic-btn" onclick="runSpeech('notes')">🎤</button>
+        </div>
+
+        <button class="save-btn" onclick="addVisit()">Save to Cloud ☁️</button>
+        <div id="syncStatus"></div>
+    </div>
+
+    <h3 style="padding-left:10px;">Visit History</h3>
+    <div id="visitHistory"></div>
+</div>
+
+<script>
+    const GOOGLE_SHEET_URL = "YOUR_WEB_APP_URL_HERE";
+
+    const medicalData = {
+        "General / Infection": ["Fever", "Viral Fever", "Bacterial Infection", "Cold", "Cough", "Cold & Cough", "Sore Throat", "Flu (Influenza)", "COVID-like symptoms", "Body Ache", "Fatigue / Weakness"],
+        "Pain & Injury": ["Headache", "Migraine", "Back Pain", "Neck Pain", "Shoulder Pain", "Knee Pain", "Joint Pain", "Muscle Pain", "Injury / Trauma", "Sprain / Strain"],
+        "Heart / BP": ["High Blood Pressure (Hypertension)", "Low Blood Pressure", "Chest Pain", "Palpitations", "Heart Check-up (Routine)"],
+        "Digestive System": ["Stomach Pain", "Acidity / GERD", "Indigestion", "Gas / Bloating", "Diarrhea", "Constipation", "Vomiting", "Food Poisoning", "Liver Problem"],
+        "Diabetes / Metabolic": ["Diabetes – Routine Check", "High Sugar Level", "Low Sugar Level", "Thyroid Disorder", "Cholesterol Problem", "Obesity / Weight Issue"],
+        "Respiratory": ["Asthma", "Breathing Difficulty", "Bronchitis", "Pneumonia"],
+        "Neurological": ["Anxiety", "Stress", "Depression", "Sleep Disorder (Insomnia)", "Dizziness", "Vertigo", "Memory Issues"],
+        "Bone / Ortho": ["Arthritis", "Osteoporosis", "Fracture", "Slip Disc", "Sciatica", "Bone Pain"],
+        "Skin / Hair": ["Skin Allergy", "Rashes", "Itching", "Fungal Infection", "Acne", "Hair Fall", "Dandruff", "Psoriasis", "Eczema"],
+        "Eye / ENT": ["Eye Infection", "Eye Pain", "Vision Problem", "Ear Pain", "Ear Infection", "Hearing Issue", "Sinusitis", "Tonsillitis"],
+        "Urinary / Kidney": ["Urinary Tract Infection (UTI)", "Burning Urination", "Kidney Stone", "Frequent Urination", "Prostate Issue"],
+        "Men / Women": ["Menstrual Pain", "Irregular Periods", "PCOD / PCOS", "Pregnancy Check-up", "Menopause Issues", "Erectile Dysfunction", "Hormonal Issue"],
+        "Routine": ["General Check-up", "Blood Test Review", "X-ray / Scan Review", "Vaccination", "Medical Certificate", "Fitness Check"]
+    };
+
+    window.onload = () => {
+        const catSelect = document.getElementById('categorySelect');
+        catSelect.add(new Option("-- Select Category --", ""));
+        Object.keys(medicalData).forEach(cat => catSelect.add(new Option(cat, cat)));
+        
+        document.getElementById('userName').value = localStorage.getItem('patientName') || "";
+        document.getElementById('drName').value = localStorage.getItem('doctorName') || "";
+        displayVisits();
+    };
+
+    function updateIllnessDropdown() {
+        const cat = document.getElementById('categorySelect').value;
+        const illSelect = document.getElementById('illnessSelect');
+        illSelect.innerHTML = '<option value="">-- Select Illness --</option>';
+        if (cat) medicalData[cat].forEach(ill => illSelect.add(new Option(ill, ill)));
+    }
+
+    function saveProfile() { 
+        localStorage.setItem('patientName', document.getElementById('userName').value); 
+        localStorage.setItem('doctorName', document.getElementById('drName').value); 
+    }
+
+    function runSpeech(fieldId, isProfileField = false) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) return alert("Speech Recognition not supported in this browser.");
+
+        const recognition = new SpeechRecognition();
+        const btn = event.currentTarget;
+        
+        recognition.onstart = () => btn.classList.add('listening');
+        recognition.onend = () => btn.classList.remove('listening');
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            document.getElementById(fieldId).value = transcript;
+            if(isProfileField) saveProfile();
+        };
+
+        recognition.start();
+    }
+
+    async function addVisit() {
+        const name = document.getElementById('userName').value;
+        const doctor = document.getElementById('drName').value;
+        const cat = document.getElementById('categorySelect').value;
+        const ill = document.getElementById('illnessSelect').value;
+        const med = document.getElementById('medicine').value;
+        const note = document.getElementById('notes').value;
+        const date = new Date().toLocaleDateString('en-GB');
+
+        if (!ill || !med || !name) return alert("Please fill Name, Illness and Medicine.");
+
+        const visit = { name, doctor, category: cat, illness: ill, medicine: med, notes: note, date, id: Date.now() };
+
+        let visits = JSON.parse(localStorage.getItem('myVisits')) || [];
+        visits.push(visit);
+        localStorage.setItem('myVisits', JSON.stringify(visits));
+
+        document.getElementById('syncStatus').innerText = "Syncing with Cloud...";
+        try {
+            await fetch(GOOGLE_SHEET_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                cache: 'no-cache',
+                body: JSON.stringify(visit)
+            });
+            document.getElementById('syncStatus').innerText = "✓ Synced to Google Sheets";
+        } catch (e) {
+            document.getElementById('syncStatus').innerText = "Offline: Saved Locally Only";
+        }
+
+        document.getElementById('medicine').value = "";
+        document.getElementById('notes').value = "";
+        displayVisits();
+    }
+
+    function displayVisits() {
+        const historyDiv = document.getElementById('visitHistory');
+        const visits = JSON.parse(localStorage.getItem('myVisits')) || [];
+        historyDiv.innerHTML = '';
+        visits.reverse().forEach(v => {
+            historyDiv.innerHTML += `
+                <div class="visit-card">
+                    <div class="visit-header">
+                        <span class="visit-date">${v.date}</span>
+                        <span class="tag">${v.category}</span>
+                    </div>
+                    <h4 style="margin:8px 0 4px 0;">${v.illness}</h4>
+                    <p style="margin:0; font-size:13px; color:#4a5568;"><strong>Dr:</strong> ${v.doctor || 'N/A'}</p>
+                    <p style="margin:4px 0 0 0; font-size:14px;"><strong>Meds:</strong> ${v.medicine}</p>
+                    <p style="margin:5px 0 0 0; font-size:13px; color:#718096; font-style:italic;">${v.notes}</p>
+                </div>`;
+        });
+    }
+</script>
+</body>
+</html>
