@@ -62,12 +62,12 @@
         .input-row {
             display: flex;
             gap: 8px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
         }
 
         input, select, textarea {
             width: 100%;
-            padding: 14px;
+            padding: 12px;
             border: 2px solid #edf2f7;
             border-radius: 12px;
             font-size: 16px;
@@ -76,31 +76,25 @@
             transition: 0.3s;
         }
 
-        input:focus, select:focus {
-            border-color: var(--primary-green);
-            outline: none;
-            background: white;
-        }
+        input:focus { border-color: var(--primary-green); outline: none; background: white; }
 
         .mic-btn {
             background: #f8fafc;
             border: 2px solid #edf2f7;
             border-radius: 12px;
             cursor: pointer;
-            padding: 0 15px;
+            padding: 0 12px;
             font-size: 18px;
-            transition: 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            min-width: 50px;
+            min-width: 45px;
         }
 
         .mic-btn.listening {
             background: #e74c3c;
             color: white;
-            border-color: #c0392b;
-            animation: pulse 1.5s infinite;
+            animation: pulse 1.2s infinite;
         }
 
         @keyframes pulse {
@@ -109,7 +103,7 @@
             100% { transform: scale(1); }
         }
 
-        button.save-btn {
+        .btn-save {
             background: linear-gradient(to right, var(--primary-green), var(--primary-blue));
             color: white;
             border: none;
@@ -120,7 +114,18 @@
             width: 100%;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(39, 174, 96, 0.3);
-            margin-top: 10px;
+        }
+
+        .btn-clear {
+            background: #fceaea;
+            color: #c0392b;
+            border: 1px solid #f5c6cb;
+            padding: 8px;
+            border-radius: 8px;
+            font-size: 12px;
+            width: 100%;
+            margin-top: 20px;
+            cursor: pointer;
         }
 
         .visit-card {
@@ -132,17 +137,9 @@
             border-left: 6px solid var(--accent-orange);
         }
 
-        .visit-header { display: flex; justify-content: space-between; align-items: flex-start; }
-        .visit-date { font-size: 11px; color: #a0aec0; font-weight: bold; }
         .tag { font-size: 10px; background: #ebf8ff; color: #2b6cb0; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; }
         
-        #syncStatus {
-            text-align: center;
-            font-size: 12px;
-            margin-top: 12px;
-            color: var(--primary-green);
-            font-weight: bold;
-        }
+        #syncStatus { text-align: center; font-size: 12px; margin-top: 10px; color: var(--primary-green); font-weight: bold; }
     </style>
 </head>
 <body>
@@ -155,21 +152,21 @@
     <div class="card">
         <label>Patient Name</label>
         <div class="input-row">
-            <input type="text" id="userName" placeholder="Your Full Name" onchange="saveProfile()">
-            <button class="mic-btn" onclick="runSpeech('userName', true)">🎤</button>
+            <input type="text" id="userName" placeholder="Full Name">
+            <button class="mic-btn" onclick="runSpeech('userName')">🎤</button>
         </div>
 
         <label>Doctor's Name</label>
         <div class="input-row">
-            <input type="text" id="drName" placeholder="Attending Doctor" onchange="saveProfile()">
-            <button class="mic-btn" onclick="runSpeech('drName', true)">🎤</button>
+            <input type="text" id="drName" placeholder="Dr. Name">
+            <button class="mic-btn" onclick="runSpeech('drName')">🎤</button>
         </div>
 
         <label>Category</label>
-        <select id="categorySelect" onchange="updateIllnessDropdown()" style="margin-bottom:15px;"></select>
+        <select id="categorySelect" onchange="updateIllnessDropdown()" style="margin-bottom:12px;"></select>
 
         <label>Problem / Illness</label>
-        <select id="illnessSelect" style="margin-bottom:15px;"></select>
+        <select id="illnessSelect" style="margin-bottom:12px;"></select>
 
         <label>Medication Given</label>
         <div class="input-row">
@@ -179,20 +176,23 @@
 
         <label>Notes</label>
         <div class="input-row">
-            <textarea id="notes" rows="2" placeholder="Additional advice..."></textarea>
+            <textarea id="notes" rows="2" placeholder="Advice..."></textarea>
             <button class="mic-btn" onclick="runSpeech('notes')">🎤</button>
         </div>
 
-        <button class="save-btn" onclick="addVisit()">Save to Cloud ☁️</button>
+        <button class="btn-save" onclick="addVisit()">Save to Cloud ☁️</button>
         <div id="syncStatus"></div>
     </div>
 
-    <h3 style="padding-left:10px;">Visit History</h3>
+    <div style="display:flex; justify-content:space-between; align-items:center; padding:0 10px;">
+        <h3>History</h3>
+        <button class="btn-clear" style="width:auto;" onclick="clearHistory()">Clear List</button>
+    </div>
     <div id="visitHistory"></div>
 </div>
 
 <script>
-    const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyk3pzgTwB_oX2i0kSEbWUaz5TPyl1rJSZOZadDpN-rpPcF8Xi7Y_g4PZNg8SvuEG_ahQ/exec";
+    const GOOGLE_SHEET_URL = "YOUR_WEB_APP_URL_HERE";
 
     const medicalData = {
         "General / Infection": ["Fever", "Viral Fever", "Bacterial Infection", "Cold", "Cough", "Cold & Cough", "Sore Throat", "Flu (Influenza)", "COVID-like symptoms", "Body Ache", "Fatigue / Weakness"],
@@ -227,59 +227,43 @@
         if (cat) medicalData[cat].forEach(ill => illSelect.add(new Option(ill, ill)));
     }
 
-    function saveProfile() { 
-        localStorage.setItem('patientName', document.getElementById('userName').value); 
-        localStorage.setItem('doctorName', document.getElementById('drName').value); 
-    }
-
-    function runSpeech(fieldId, isProfileField = false) {
+    function runSpeech(fieldId) {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (!SpeechRecognition) return alert("Speech Recognition not supported in this browser.");
-
+        if (!SpeechRecognition) return alert("Not supported");
         const recognition = new SpeechRecognition();
         const btn = event.currentTarget;
-        
         recognition.onstart = () => btn.classList.add('listening');
         recognition.onend = () => btn.classList.remove('listening');
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            document.getElementById(fieldId).value = transcript;
-            if(isProfileField) saveProfile();
-        };
-
+        recognition.onresult = (e) => { document.getElementById(fieldId).value = e.results[0][0].transcript; };
         recognition.start();
     }
 
     async function addVisit() {
         const name = document.getElementById('userName').value;
-        const doctor = document.getElementById('drName').value;
+        const dr = document.getElementById('drName').value;
         const cat = document.getElementById('categorySelect').value;
         const ill = document.getElementById('illnessSelect').value;
         const med = document.getElementById('medicine').value;
         const note = document.getElementById('notes').value;
         const date = new Date().toLocaleDateString('en-GB');
 
-        if (!ill || !med || !name) return alert("Please fill Name, Illness and Medicine.");
+        if (!ill || !med || !name) return alert("Fill Name, Illness and Medicine.");
 
-        const visit = { name, doctor, category: cat, illness: ill, medicine: med, notes: note, date, id: Date.now() };
+        // Save Names for next time
+        localStorage.setItem('patientName', name);
+        localStorage.setItem('doctorName', dr);
+
+        const visit = { name, doctor: dr, category: cat, illness: ill, medicine: med, notes: note, date, id: Date.now() };
 
         let visits = JSON.parse(localStorage.getItem('myVisits')) || [];
         visits.push(visit);
         localStorage.setItem('myVisits', JSON.stringify(visits));
 
-        document.getElementById('syncStatus').innerText = "Syncing with Cloud...";
+        document.getElementById('syncStatus').innerText = "Syncing...";
         try {
-            await fetch(GOOGLE_SHEET_URL, {
-                method: 'POST',
-                mode: 'no-cors',
-                cache: 'no-cache',
-                body: JSON.stringify(visit)
-            });
-            document.getElementById('syncStatus').innerText = "✓ Synced to Google Sheets";
-        } catch (e) {
-            document.getElementById('syncStatus').innerText = "Offline: Saved Locally Only";
-        }
+            await fetch(GOOGLE_SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(visit) });
+            document.getElementById('syncStatus').innerText = "✓ Synced";
+        } catch (e) { document.getElementById('syncStatus').innerText = "Saved Locally"; }
 
         document.getElementById('medicine').value = "";
         document.getElementById('notes').value = "";
@@ -293,18 +277,23 @@
         visits.reverse().forEach(v => {
             historyDiv.innerHTML += `
                 <div class="visit-card">
-                    <div class="visit-header">
-                        <span class="visit-date">${v.date}</span>
-                        <span class="tag">${v.category}</span>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; color:#a0aec0;">
+                        <span>${v.date}</span><span class="tag">${v.category}</span>
                     </div>
-                    <h4 style="margin:8px 0 4px 0;">${v.illness}</h4>
-                    <p style="margin:0; font-size:13px; color:#4a5568;"><strong>Dr:</strong> ${v.doctor || 'N/A'}</p>
-                    <p style="margin:4px 0 0 0; font-size:14px;"><strong>Meds:</strong> ${v.medicine}</p>
-                    <p style="margin:5px 0 0 0; font-size:13px; color:#718096; font-style:italic;">${v.notes}</p>
+                    <h4 style="margin:5px 0;">${v.illness}</h4>
+                    <p style="margin:0; font-size:13px;"><strong>Dr:</strong> ${v.doctor || 'N/A'}</p>
+                    <p style="margin:4px 0; font-size:14px;"><strong>Meds:</strong> ${v.medicine}</p>
+                    <p style="margin:0; font-size:12px; color:#718096;"><em>${v.notes}</em></p>
                 </div>`;
         });
+    }
+
+    function clearHistory() {
+        if(confirm("Clear local history from screen? (Cloud data remains safe)")) {
+            localStorage.removeItem('myVisits');
+            displayVisits();
+        }
     }
 </script>
 </body>
 </html>
-
